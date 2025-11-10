@@ -1,0 +1,442 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Temporary Mail generator — Professional (Glassmorphism)</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-1: #0f172a;
+    --bg-2: #0b1220;
+    --card-glass: rgba(255,255,255,0.06);
+    --card-border: rgba(255,255,255,0.08);
+    --accent-1: #7c5cff;
+    --accent-2: #4cc9f0;
+    --muted: rgba(255,255,255,0.68);
+    --glass-blur: 14px;
+    --radius: 14px;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    min-height:100vh;
+    font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;
+    color: #e6eef8;
+    background:
+      radial-gradient(600px 400px at 10% 20%, rgba(124,92,255,0.12), transparent 12%),
+      radial-gradient(600px 400px at 90% 80%, rgba(76,201,240,0.08), transparent 12%),
+      linear-gradient(180deg, var(--bg-1), var(--bg-2));
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:36px;
+  }
+
+  /* subtle animated backdrop shapes */
+  .shape {
+    position:absolute; pointer-events:none; filter: blur(48px); opacity:0.7; mix-blend-mode:screen;
+  }
+  .s1{width:520px;height:520px; left:-8%; top:-12%; background:linear-gradient(180deg,var(--accent-1),transparent);}
+  .s2{width:420px;height:420px; right:-6%; bottom:-8%; background:linear-gradient(180deg,var(--accent-2),transparent);}
+
+  /* container */
+  .wrap{
+    width:100%;
+    max-width:980px;
+    display:grid;
+    grid-template-columns: 1fr 420px;
+    gap:26px;
+    position:relative;
+    z-index:2;
+  }
+
+  /* main glass card */
+  .panel{
+    background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02));
+    border-radius: var(--radius);
+    padding:22px;
+    border: 1px solid var(--card-border);
+    backdrop-filter: blur(var(--glass-blur));
+    box-shadow: 0 10px 40px rgba(2,6,23,0.6);
+  }
+
+  header h1{
+    margin:0; font-size:20px; font-weight:700; color: #f8fbff;
+  }
+  header p { margin:6px 0 0 0; color:var(--muted); font-size:13px; }
+
+  /* controls */
+  .controls { margin-top:18px; display:flex; gap:12px; flex-wrap:wrap; align-items:center; }
+  .select, .toggle {
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.04);
+    color: #eaf3ff; padding:10px 12px; border-radius:10px; font-size:14px;
+  }
+  .select:focus, .ghost:focus, .primary:focus { outline: 2px solid rgba(124,92,255,0.16); outline-offset:2px; }
+
+  .primary{
+    background: linear-gradient(90deg,var(--accent-1),var(--accent-2));
+    border:none; color:#051025; padding:12px 14px; border-radius:12px; font-weight:600; cursor:pointer;
+    box-shadow: 0 8px 30px rgba(76,201,240,0.06);
+    transition: transform .12s ease, box-shadow .12s ease;
+  }
+  .primary:hover{ transform: translateY(-3px); box-shadow: 0 18px 50px rgba(76,201,240,0.08); }
+
+  .ghost{
+    background: transparent; border: 1px solid rgba(255,255,255,0.05);
+    color: var(--muted); padding:10px 12px; border-radius:10px; cursor:pointer;
+  }
+
+  .controls .right { margin-left:auto; display:flex; gap:8px; align-items:center; }
+
+  /* credential card (right) */
+  .cred {
+    display:flex; flex-direction:column; gap:14px; justify-content:space-between;
+    min-height:280px;
+  }
+  .cred .box {
+    background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+    border-radius:12px; padding:14px; border:1px solid rgba(255,255,255,0.03);
+    display:flex; flex-direction:column; gap:10px;
+  }
+  .label { font-size:12px; color:var(--muted); }
+  .value { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, monospace; font-weight:600; font-size:15px; color:#f7fbff; }
+
+  .row { display:flex; align-items:center; gap:10px; }
+  .spacer { flex:1; }
+
+  .pill {
+    font-size:12px; font-weight:700; padding:8px 10px; border-radius:999px;
+    display:inline-flex; align-items:center; gap:8px;
+  }
+  .pill.active { background: linear-gradient(90deg, rgba(16,185,129,0.12), rgba(16,185,129,0.08)); color:#a7f3d0; }
+  .pill.expired { background: linear-gradient(90deg, rgba(239,68,68,0.08), rgba(239,68,68,0.04)); color:#fecaca; }
+
+  .small { font-size:13px; color:var(--muted); }
+
+  .actions { display:flex; gap:8px; align-items:center; }
+
+  .copybtn {
+    background: rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.03); padding:8px 10px; border-radius:8px;
+    cursor:pointer; font-weight:600; color:#eaf3ff;
+  }
+
+  .download { background:transparent; border: none; color:var(--muted); cursor:pointer; }
+
+  /* footer note - removed as requested */
+  .note { margin-top:14px; color:var(--muted); font-size:12px; display:none; }
+
+  /* transitions */
+  .fade-in { animation: fadeIn .36s ease both; }
+  @keyframes fadeIn { from {opacity:0; transform: translateY(6px)} to {opacity:1; transform:none} }
+
+  /* responsive */
+  @media (max-width:900px){
+    .wrap{ grid-template-columns: 1fr; }
+    .cred{ order:2 }
+  }
+</style>
+</head>
+<body>
+  <div class="shape s1"></div>
+  <div class="shape s2"></div>
+
+  <div class="wrap">
+    <div class="panel fade-in">
+      <header>
+        <h1>Temporary Mail generator</h1>
+        <p>Generate ephemeral email-like IDs & passwords for testing.</p>
+      </header>
+
+      <div class="controls" style="margin-top:18px;">
+        <select id="ttlSel" class="select" title="Time to live">
+          <option value="60">1 minute</option>
+          <option value="300" selected>5 minutes</option>
+          <option value="600">10 minutes</option>
+          <option value="1800">30 minutes</option>
+        </select>
+
+        <select id="domainSel" class="select" title="Domain style">
+          <option value="example.test" selected>example.test</option>
+          <option value="temp.mail">temp.mail</option>
+          <option value="demo.app">demo.app</option>
+        </select>
+
+        <label style="display:flex; align-items:center; gap:8px;" title="Remember credentials across refresh">
+          <input id="remember" type="checkbox" style="accent-color: #7c5cff;" />
+          <span class="small">Remember</span>
+        </label>
+
+        <div class="right">
+          <button id="genBtn" class="primary">Generate New</button>
+          <button id="pwdBtn" class="ghost">New Password</button>
+        </div>
+      </div>
+
+      <div style="margin-top:18px; display:flex; gap:12px; flex-wrap:wrap;">
+        <div style="flex:1; min-width:220px;">
+          <div class="box">
+            <div class="label">Latest generated</div>
+            <div class="value" id="generatedAt">—</div>
+            <div class="small">Timestamp (local)</div>
+          </div>
+        </div>
+
+        <div style="flex:1; min-width:220px;">
+          <div class="box">
+            <div class="label">Actions</div>
+            <div class="row">
+              <button id="copyAll" class="copybtn">Copy All</button>
+              <button id="downloadBtn" class="download">Download JSON</button>
+              <button id="invalidate" class="ghost">Invalidate</button>
+              <button id="extend" class="ghost" title="Extend by selected TTL">Extend</button>
+            </div>
+            <!-- Note area intentionally removed per request -->
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <aside class="panel cred fade-in" aria-live="polite">
+      <div>
+        <div class="box">
+          <div class="label">Temporary Email</div>
+          <div class="row">
+            <div class="value" id="emailVal">—</div>
+            <div class="spacer"></div>
+            <button id="copyEmail" class="copybtn">Copy</button>
+          </div>
+        </div>
+
+        <div style="height:10px"></div>
+
+        <div class="box">
+          <div class="label">Password</div>
+          <div class="row">
+            <div class="value" id="pwdVal">—</div>
+            <div class="spacer"></div>
+            <button id="copyPwd" class="copybtn">Copy</button>
+            <button id="togglePwd" class="ghost">Show</button>
+          </div>
+        </div>
+
+        <div style="height:10px"></div>
+
+        <div class="box">
+          <div class="row" style="align-items:center; justify-content:space-between;">
+            <div>
+              <div class="label">Expires in</div>
+              <div style="display:flex; gap:8px; align-items:center;">
+                <div class="value" id="countdown">00:00</div>
+                <div class="small" id="expiryStamp"></div>
+              </div>
+            </div>
+            <div>
+              <div class="label">Status</div>
+              <div style="margin-top:6px;">
+                <span id="status" class="pill active">Active</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex; gap:10px; justify-content:space-between; align-items:center;">
+        <div class="small" id="footerNote" style="display:none;"></div>
+        <div style="display:flex; gap:8px;">
+          <button id="regenBtn" class="ghost">Regenerate</button>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+<script>
+/* Professional Temp Credentials — client-side only (unchanged functionality) */
+
+/* helpers */
+function randString(len=8){
+  const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let out = '';
+  const arr = new Uint32Array(len);
+  window.crypto.getRandomValues(arr);
+  for(let i=0;i<len;i++) out += chars[arr[i] % chars.length];
+  return out;
+}
+function genEmail(domain){
+  return `${randString(5).toLowerCase()}.${randString(3).toLowerCase()}@${domain}`;
+}
+function genPwd(){
+  return randString(6) + '-' + randString(4) + '!' + Math.floor(Math.random()*90+10);
+}
+function fmt(ts){ return new Date(ts).toLocaleString(); }
+function clock(sec){
+  if(sec<=0) return '00:00';
+  const m = Math.floor(sec/60), s = sec%60;
+  return String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+}
+
+/* refs */
+const emailVal = document.getElementById('emailVal');
+const pwdVal = document.getElementById('pwdVal');
+const countdownEl = document.getElementById('countdown');
+const expiryStamp = document.getElementById('expiryStamp');
+const statusPill = document.getElementById('status');
+const generatedAt = document.getElementById('generatedAt');
+
+const ttlSel = document.getElementById('ttlSel');
+const domainSel = document.getElementById('domainSel');
+const rememberChk = document.getElementById('remember');
+
+const genBtn = document.getElementById('genBtn');
+const pwdBtn = document.getElementById('pwdBtn');
+const copyEmail = document.getElementById('copyEmail');
+const copyPwd = document.getElementById('copyPwd');
+const togglePwd = document.getElementById('togglePwd');
+const copyAll = document.getElementById('copyAll');
+const downloadBtn = document.getElementById('downloadBtn');
+const invalidateBtn = document.getElementById('invalidate');
+const extendBtn = document.getElementById('extend');
+const regenBtn = document.getElementById('regenBtn');
+
+let state = { email:null, pwd:null, expiresAt:0, timer:null, showPwd:false };
+
+/* storage functions */
+function saveIfRemember(){
+  if(rememberChk.checked && state.email){
+    localStorage.setItem('tempCreds_v2', JSON.stringify({
+      email: state.email, pwd: state.pwd, expiresAt: state.expiresAt
+    }));
+  } else {
+    localStorage.removeItem('tempCreds_v2');
+  }
+}
+function loadRemember(){
+  try{
+    const raw = localStorage.getItem('tempCreds_v2');
+    if(!raw) return null;
+    const obj = JSON.parse(raw);
+    if(!obj.email) return null;
+    return obj;
+  } catch(e){ return null; }
+}
+
+/* UI update */
+function refreshUI(){
+  emailVal.textContent = state.email || '—';
+  pwdVal.textContent = state.showPwd ? (state.pwd || '—') : (state.pwd ? '••••••••' : '—');
+  generatedAt.textContent = state.email ? fmt(Date.now()) : '—';
+  expiryStamp.textContent = state.expiresAt ? 'Expires: ' + fmt(state.expiresAt) : '';
+  const alive = state.expiresAt && (Date.now() < state.expiresAt);
+  statusPill.textContent = alive ? 'Active' : 'Expired';
+  statusPill.className = 'pill ' + (alive ? 'active' : 'expired');
+
+  if(state.timer) clearInterval(state.timer);
+  if(alive){
+    state.timer = setInterval(()=>{
+      const left = Math.max(0, Math.round((state.expiresAt - Date.now())/1000));
+      countdownEl.textContent = clock(left);
+      if(left<=0){
+        clearInterval(state.timer);
+        state.timer = null;
+        refreshUI();
+        saveIfRemember();
+      }
+    }, 300);
+  } else {
+    countdownEl.textContent = '00:00';
+  }
+  saveIfRemember();
+}
+
+/* core */
+function createNew(ttlSec){
+  const dom = domainSel.value || 'example.test';
+  const email = genEmail(dom);
+  const pwd = genPwd();
+  const expiresAt = Date.now() + ttlSec*1000;
+  state.email = email; state.pwd = pwd; state.expiresAt = expiresAt;
+  refreshUI();
+}
+
+function regenPwdOnly(){
+  if(!state.email) return;
+  state.pwd = genPwd();
+  refreshUI();
+}
+
+function extendTTL(){
+  if(!state.expiresAt) return;
+  const add = parseInt(ttlSel.value,10) || 300;
+  state.expiresAt += add*1000;
+  refreshUI();
+}
+
+function invalidateNow(){
+  state.expiresAt = 0;
+  refreshUI();
+}
+
+/* clipboard */
+async function copyText(s, btn){
+  try{
+    await navigator.clipboard.writeText(s);
+    if(btn){
+      const old = btn.textContent;
+      btn.textContent = 'Copied';
+      setTimeout(()=> btn.textContent = old,900);
+    }
+  }catch(e){
+    // fallback
+    const ta = document.createElement('textarea'); ta.value = s; document.body.appendChild(ta); ta.select();
+    try{ document.execCommand('copy'); }catch(e){}
+    ta.remove();
+  }
+}
+
+/* download */
+function downloadJSON(){
+  const payload = { email: state.email, pwd: state.pwd, expiresAt: state.expiresAt, generatedAt: Date.now() };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = 'credentials.json';
+  document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+}
+
+/* events */
+genBtn.addEventListener('click', ()=> createNew(parseInt(ttlSel.value,10)||300));
+pwdBtn.addEventListener('click', ()=> regenPwdOnly());
+copyEmail.addEventListener('click', ()=> state.email && copyText(state.email, copyEmail));
+copyPwd.addEventListener('click', ()=> state.pwd && copyText(state.pwd, copyPwd));
+togglePwd.addEventListener('click', ()=>{
+  state.showPwd = !state.showPwd;
+  togglePwd.textContent = state.showPwd ? 'Hide' : 'Show';
+  refreshUI();
+});
+copyAll.addEventListener('click', ()=> {
+  if(state.email && state.pwd) copyText(`${state.email}\n${state.pwd}`, copyAll);
+});
+downloadBtn.addEventListener('click', ()=> downloadJSON());
+invalidateBtn.addEventListener('click', ()=> invalidateNow());
+extendBtn.addEventListener('click', ()=> extendTTL());
+regenBtn.addEventListener('click', ()=> createNew(parseInt(ttlSel.value,10)||300));
+
+rememberChk.addEventListener('change', ()=> saveIfRemember());
+
+/* init */
+(function init(){
+  const remembered = loadRemember();
+  if(remembered && Date.now() < (remembered.expiresAt || 0)){
+    state.email = remembered.email; state.pwd = remembered.pwd; state.expiresAt = remembered.expiresAt;
+    rememberChk.checked = true;
+    refreshUI();
+    return;
+  } else {
+    localStorage.removeItem('tempCreds_v2');
+  }
+  createNew(parseInt(ttlSel.value,10)||300);
+})();
+</script>
+</body>
+</html>
